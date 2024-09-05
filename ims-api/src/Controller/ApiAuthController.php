@@ -2,8 +2,13 @@
 
 namespace App\Controller;
 
+use App\Entity\Membership;
+use App\Entity\Organization;
 use App\Entity\User;
+use App\Repository\MembershipRepository;
+use App\Repository\OrganizationRepository;
 use App\Repository\UserRepository;
+use App\Value\MembershipRole;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Firebase\JWT\JWT;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -19,7 +24,8 @@ class ApiAuthController extends AbstractController
     public function register(
         Request $request,
         UserPasswordHasherInterface $passwordHasher,
-        UserRepository $userRepository
+        UserRepository $userRepository,
+        MembershipRepository $membershipRepository,
     ): JsonResponse
     {
         // @todo Validate username password. Even better here receive validated object
@@ -30,12 +36,15 @@ class ApiAuthController extends AbstractController
 
         $user = User::createNewWithEmail($email);
         $user->setPassword($passwordHasher->hashPassword($user, $plainPassword));
+        $organization = new Organization('Personal Organization', $user);
+        $membership = new Membership($organization, $user, MembershipRole::ADMIN);
 
         try {
             $userRepository->save($user);
         } catch (UniqueConstraintViolationException $exception) {
             throw new BadRequestException('Email already in use');
         }
+        $membershipRepository->save($membership);
 
         return new JsonResponse([
             'success' => true
@@ -54,7 +63,6 @@ class ApiAuthController extends AbstractController
             'exp' => time() + 3600 * 24,
             'sub' => $user->getId()
         ];
-
 
         return new JsonResponse(
             [

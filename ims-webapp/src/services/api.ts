@@ -1,13 +1,16 @@
 import {env} from "../env.ts";
+import selectedOrganizationStorage from "./selected-organization-storage.ts";
 
 class Api {
     private async fetch<ResponseType>({ body, method, path }: { path: string, body?: object, method: 'POST' | 'GET' | 'DELETE' }): Promise<ResponseType> {
         const token = localStorage.getItem('token')
+        const selectedOrganization = selectedOrganizationStorage.getOrg()
         const response = await fetch(`${env.api.baseUrl}${path}`, {
             headers: {
                 'accept': 'application/json',
                 'content-type': 'application/json',
                 ...(token ? { 'authorization': `Bearer ${token}` } : {}),
+                ...(selectedOrganization ? { 'x-organization-id': String(selectedOrganization.id) } : {})
             },
             body: body ? JSON.stringify(body) : undefined,
             method: method,
@@ -46,6 +49,20 @@ class Api {
     public ping() {
         return this.fetch({
             path: '/ping',
+            method: 'GET',
+        })
+    }
+
+    public getProducts() {
+        return this.fetch<{ products: { id: number, name: string }[] }>({
+            path: '/product',
+            method: 'GET',
+        })
+    }
+
+    public getMyOrganizations() {
+        return this.fetch<{ organizations: { id: number, name: string }[] }>({
+            path: '/organization',
             method: 'GET',
         })
     }

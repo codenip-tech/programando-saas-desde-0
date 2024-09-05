@@ -11,9 +11,12 @@ class TestController extends AbstractController
 {
     #[Route('/api/ping', name: 'ping')]
     public function ping() {
+        /** @var User $user */
+        $user = $this->getUser();
+
         return new JsonResponse(
             [
-                'pong' => true
+                'pong' => $user->getId()
             ]
         );
     }

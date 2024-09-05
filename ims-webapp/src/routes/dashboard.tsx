@@ -1,14 +1,14 @@
-import api from "../services/api.ts";
+import {useProducts} from "../hooks/products.ts";
 
 function Dashboard() {
-    async function ping() {
-        await api.ping()
-    }
+    const { products } = useProducts()
 
     return (
         <>
             <h1>Dashboard</h1>
-            <button onClick={ping}>Ping</button>
+            <ul>
+                {products.map(product => <li key={product.id}>{product.name}</li>)}
+            </ul>
         </>
     )
 }
