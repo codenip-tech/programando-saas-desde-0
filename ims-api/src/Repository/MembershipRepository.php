@@ -27,7 +27,7 @@ class MembershipRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('m')
             ->select('m')
             ->addSelect('o')
-            ->addSelect('user')
+            ->addSelect('u')
             ->join('m.organization', 'o')
             ->join('m.user', 'u')
             ->where('m.organization = :organizationId AND m.user = :userId')
