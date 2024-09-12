@@ -7,8 +7,8 @@ import api from "../services/api.ts";
 const tokenStorageKey = 'token'
 
 function Login() {
-    const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('')
+    const [email, setEmail] = useState('test@test.com')
+    const [password, setPassword] = useState('1234')
     const [error, setError] = useState('')
     const [token, setToken] = useState(
         localStorage.getItem(tokenStorageKey)
