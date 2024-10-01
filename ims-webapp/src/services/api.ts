@@ -10,7 +10,7 @@ class Api {
                 'accept': 'application/json',
                 'content-type': 'application/json',
                 ...(token ? { 'authorization': `Bearer ${token}` } : {}),
-                ...(selectedOrganization ? { 'x-organization-id': String(selectedOrganization.id) } : {})
+                ...(token && selectedOrganization ? { 'x-organization-id': String(selectedOrganization.id) } : {})
             },
             body: body ? JSON.stringify(body) : undefined,
             method: method,
@@ -56,6 +56,51 @@ class Api {
     public getProducts() {
         return this.fetch<{ products: { id: number, name: string }[] }>({
             path: '/product',
+            method: 'GET',
+        })
+    }
+
+    public getProduct(id: number) {
+        return this.fetch<{ product: { id: number, name: string, tagIds: number[] } }>({
+            path: `/product/${id}`,
+            method: 'GET',
+        })
+    }
+
+    public updateProduct({ id, name, tagIds }: { id: number, name: string, tagIds: number[] }) {
+        return this.fetch({
+            path: `/product/${id}`,
+            method: 'POST',
+            body: {
+                name,
+                tagIds,
+            }
+        })
+    }
+
+    public createProduct({ name }: { name: string }) {
+        return this.fetch<{ id: number }>({
+            path: `/product`,
+            method: 'POST',
+            body: {
+                name,
+            }
+        })
+    }
+
+    public createTag({ name }: { name: string }) {
+        return this.fetch<{ tag: { id: number } }>({
+            path: `/tag`,
+            method: 'POST',
+            body: {
+                name,
+            }
+        })
+    }
+
+    public getTags() {
+        return this.fetch<{ tags: { id: number, name: string }[] }>({
+            path: `/tag`,
             method: 'GET',
         })
     }

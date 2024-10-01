@@ -3,32 +3,27 @@
 namespace App\Repository;
 
 use App\Entity\Organization;
-use App\Entity\Product;
+use App\Entity\ProductProvider;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
-class ProductRepository
+class ProductProviderRepository
 {
     private readonly ServiceEntityRepository $entityRepository;
 
     public function __construct(ManagerRegistry $registry)
     {
-        $this->entityRepository = new ServiceEntityRepository($registry, Product::class);
+        $this->entityRepository = new ServiceEntityRepository($registry, ProductProvider::class);
     }
 
-    public function save(Product $product): void
+    public function save(ProductProvider $tag): void
     {
-        $this->entityRepository->getEntityManager()->persist($product);
+        $this->entityRepository->getEntityManager()->persist($tag);
         $this->entityRepository->getEntityManager()->flush();
     }
 
     public function findByOrganization(Organization $organization)
     {
         return $this->entityRepository->findBy(['organization' => $organization]);
-    }
-
-    public function findOneByIdAndOrganization(int $id, Organization $organization): ?Product
-    {
-        return $this->entityRepository->findOneBy(['id' => $id, 'organization' => $organization]);
     }
 }

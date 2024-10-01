@@ -1,14 +1,15 @@
-import {useProducts} from "../hooks/products.ts";
+import {Link} from "react-router-dom";
+import {routes} from "./route-names.ts";
 
 function Dashboard() {
-    const { products } = useProducts()
-
     return (
         <>
             <h1>Dashboard</h1>
             <ul>
-                {products.map(product => <li key={product.id}>{product.name}</li>)}
+                <li><Link to={routes.products}>Products</Link></li>
             </ul>
+
+
         </>
     )
 }

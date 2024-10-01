@@ -12,6 +12,9 @@ import PrivateRoute from "./routes/protected-route.tsx";
 import {appRoutePrefix, profileRoutePrefix, routes} from "./routes/route-names.ts";
 import MyOrganizations from "./routes/my-organizations.tsx";
 import Navbar from "./components/navbar.tsx";
+import Products from "./routes/products-list.tsx";
+import ProductEdit from "./routes/product-edit.tsx";
+import ProductCreate from "./routes/product-create.tsx";
 
 const router = createBrowserRouter([
     {
@@ -43,6 +46,18 @@ const router = createBrowserRouter([
             {
                 path: routes.dashboard,
                 element: <Dashboard />
+            },
+            {
+                path: routes.products,
+                element: <Products />
+            },
+            {
+                path: routes.createProduct,
+                element: <ProductCreate />
+            },
+            {
+                path: routes.editProduct,
+                element: <ProductEdit />
             },
         ]
     },
