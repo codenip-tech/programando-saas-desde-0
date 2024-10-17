@@ -4,6 +4,9 @@ namespace App\Repository;
 
 use App\Entity\Organization;
 use App\Entity\Product;
+use App\Repository\Value\ProductListFilter;
+use App\Repository\Value\ProductListSort;
+use App\Repository\Value\ProductListSortField;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -22,9 +25,26 @@ class ProductRepository
         $this->entityRepository->getEntityManager()->flush();
     }
 
-    public function findByOrganization(Organization $organization)
+    public function delete(Product $product): void
     {
-        return $this->entityRepository->findBy(['organization' => $organization]);
+        $this->entityRepository->getEntityManager()->remove($product);
+        $this->entityRepository->getEntityManager()->flush();
+    }
+
+    public function findByOrganization(Organization $organization, ?ProductListSort $sort, ?ProductListFilter $filter)
+    {
+        $qb = $this->entityRepository->createQueryBuilder('p')
+            ->where('p.organization = :organization')
+            ->setParameter('organization', $organization->getId());
+        if ($sort) {
+            $qb->orderBy('p.'.$sort->field->value, $sort->direction->value);
+        }
+        if ($filter) {
+            $qb->andWhere('p.name LIKE :name')
+                ->setParameter(':name', '%'.$filter->value.'%');
+        }
+
+        return $qb->getQuery()->execute();
     }
 
     public function findOneByIdAndOrganization(int $id, Organization $organization): ?Product

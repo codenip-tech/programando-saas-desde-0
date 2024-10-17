@@ -1,18 +1,35 @@
 import {env} from "../env.ts";
 import selectedOrganizationStorage from "./selected-organization-storage.ts";
 
+export type GetProductsInput = {
+    sort: { field: string, direction: 'asc' | 'desc' } | null
+    filter: { field: string, value: string } | null
+}
+
+type RequestBody = { type: 'files', files: Record<string, File> } | { type: 'json', content: object }
+
 class Api {
-    private async fetch<ResponseType>({ body, method, path }: { path: string, body?: object, method: 'POST' | 'GET' | 'DELETE' }): Promise<ResponseType> {
+    private serializeBody(requestBody?: RequestBody) {
+        if (!requestBody) return undefined
+        if (requestBody.type === 'json') return JSON.stringify(requestBody.content)
+        const data = new FormData()
+        for (const [fieldName, file] of Object.entries(requestBody.files))
+        data.append(fieldName, file)
+
+        return data
+    }
+
+    private async fetch<ResponseType>({ body, method, path }: { path: string, body?: RequestBody, method: 'POST' | 'GET' | 'DELETE' }): Promise<ResponseType> {
         const token = localStorage.getItem('token')
         const selectedOrganization = selectedOrganizationStorage.getOrg()
         const response = await fetch(`${env.api.baseUrl}${path}`, {
             headers: {
                 'accept': 'application/json',
-                'content-type': 'application/json',
+                ...(body?.type === 'json' ? { 'content-type': 'application/json' } : {}),
                 ...(token ? { 'authorization': `Bearer ${token}` } : {}),
                 ...(token && selectedOrganization ? { 'x-organization-id': String(selectedOrganization.id) } : {})
             },
-            body: body ? JSON.stringify(body) : undefined,
+            body: this.serializeBody(body),
             method: method,
         })
 
@@ -29,8 +46,22 @@ class Api {
             method: 'POST',
             path: '/auth/register',
             body: {
-                email: email,
-                password: password,
+                type: 'json',
+                content: {
+                    email: email,
+                    password: password,
+                }
+            }
+        })
+    }
+
+    public importFile(file: File) {
+        return this.fetch({
+            method: 'POST',
+            path: '/product/import',
+            body: {
+                type: 'files',
+                files: { file: file },
             }
         })
     }
@@ -40,8 +71,11 @@ class Api {
             method: 'POST',
             path: '/auth/login',
             body: {
-                email: email,
-                password: password,
+                type: 'json',
+                content: {
+                    email: email,
+                    password: password,
+                }
             }
         })
     }
@@ -53,10 +87,17 @@ class Api {
         })
     }
 
-    public getProducts() {
+    public getProducts({ sort, filter }: GetProductsInput) {
         return this.fetch<{ products: { id: number, name: string }[] }>({
-            path: '/product',
-            method: 'GET',
+            path: '/product/list',
+            method: 'POST',
+            body: {
+                type: 'json',
+                content: {
+                    sort: sort,
+                    filter: filter,
+                }
+            },
         })
     }
 
@@ -72,8 +113,11 @@ class Api {
             path: `/product/${id}`,
             method: 'POST',
             body: {
-                name,
-                tagIds,
+                type: 'json',
+                content: {
+                    name,
+                    tagIds,
+                }
             }
         })
     }
@@ -83,7 +127,10 @@ class Api {
             path: `/product`,
             method: 'POST',
             body: {
-                name,
+                type: 'json',
+                content: {
+                    name,
+                }
             }
         })
     }
@@ -93,7 +140,10 @@ class Api {
             path: `/tag`,
             method: 'POST',
             body: {
-                name,
+                type: 'json',
+                content: {
+                    name,
+                }
             }
         })
     }
