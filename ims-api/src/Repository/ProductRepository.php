@@ -31,6 +31,12 @@ class ProductRepository
         $this->entityRepository->getEntityManager()->flush();
     }
 
+    /**
+     * @param Organization $organization
+     * @param ProductListSort|null $sort
+     * @param ProductListFilter|null $filter
+     * @return Product[]
+     */
     public function findByOrganization(Organization $organization, ?ProductListSort $sort, ?ProductListFilter $filter)
     {
         $qb = $this->entityRepository->createQueryBuilder('p')
@@ -50,5 +56,10 @@ class ProductRepository
     public function findOneByIdAndOrganization(int $id, Organization $organization): ?Product
     {
         return $this->entityRepository->findOneBy(['id' => $id, 'organization' => $organization]);
+    }
+
+    public function findAllProductsByOrganization(Organization $organization): array
+    {
+        return $this->entityRepository->findBy(['organization' => $organization]);
     }
 }

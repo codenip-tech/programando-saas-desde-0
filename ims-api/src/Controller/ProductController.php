@@ -7,18 +7,16 @@ use App\Entity\Product;
 use App\Entity\Tag;
 use App\Repository\ProductRepository;
 use App\Repository\TagRepository;
-use App\Repository\Value\ProductListFilter;
-use App\Repository\Value\ProductListFilterField;
-use App\Repository\Value\ProductListSort;
-use App\Repository\Value\ProductListSortField;
+use App\Service\ProductFetcher;
+use App\Service\ResponseFormatter;
 use App\Value\AccessingMember;
-use App\Value\ListSort;
-use App\Value\ListSortDirection;
+use App\Value\ResponseFormatterContentType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
@@ -74,27 +72,48 @@ class ProductController extends AbstractController
 
     #[Route('/list', name: 'product_list', methods: ['POST'])]
     public function listProducts(
-        ProductRepository $productRepository,
         AccessingMember $accessingMember,
+        ProductFetcher $productFetcher,
         Request $request,
+        #[MapRequestPayload] ProductListDto $productListDto,
+        ResponseFormatter $responseFormatter,
+    )
+    {
+        $products = $productFetcher->getProducts($accessingMember->membership, $productListDto);
+
+        // @todo Use symfony stuff so we can just return array and it's converted to corresponding content type
+        return $responseFormatter->formatResponse([
+            'products' => array_map(fn (Product $product) => ['id' => $product->getId(), 'name' => $product->getName()], $products)
+        ], ResponseFormatterContentType::from($request->headers->get('Accept')));
+    }
+
+    #[Route('/export', name: 'product_export', methods: ['POST'])]
+    public function exportProducts(
+        AccessingMember $accessingMember,
+        ProductFetcher $productFetcher,
         #[MapRequestPayload] ProductListDto $productListDto,
     )
     {
-        $membership = $accessingMember->membership;
-        $products = $productRepository->findByOrganization(
-            $membership->getOrganization(),
-            $productListDto->sort ? new ProductListSort(
-                ProductListSortField::from($productListDto->sort->field),
-                ListSortDirection::from($productListDto->sort->direction)
-            ) : null,
-            $productListDto->filter ? new ProductListFilter(
-                ProductListFilterField::from($productListDto->filter->field),
-                $productListDto->filter->value
-            ) : null
-        );
+        $products = $productFetcher->getProducts($accessingMember->membership, $productListDto);
+        $fp = fopen('php://memory', 'w+'); // or any other writable stream
+        // @todo Improve csv generation
+        fputcsv($fp, ['id','name','tags']);
+        foreach ($products as $product) {
+            fputcsv($fp, [
+                $product->getId(),
+                $product->getName(),
+                implode(
+                    ',',
+                    $product->getTags()->map(fn (Tag $tag) => $tag->getName())->toArray()
+                )
+            ]);
+        }
 
-        return new JsonResponse([
-            'products' => array_map(fn (Product $product) => ['id' => $product->getId(), 'name' => $product->getName()], $products)
+        $csv = stream_get_contents($fp, null, 0);
+        fclose($fp);
+
+        return new Response($csv, Response::HTTP_OK, [
+            'Content-Type' => 'text/csv',
         ]);
     }
 

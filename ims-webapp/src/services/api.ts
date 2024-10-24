@@ -38,7 +38,9 @@ class Api {
             throw new Error('Api failed')
         }
 
-        return await response.json() as ResponseType
+        return response.headers.get('content-type') === 'application/json' ?
+            await response.json() as ResponseType :
+            await response.blob() as ResponseType
     }
 
     public register({ email, password }: { email: string, password: string }) {
@@ -90,6 +92,20 @@ class Api {
     public getProducts({ sort, filter }: GetProductsInput) {
         return this.fetch<{ products: { id: number, name: string }[] }>({
             path: '/product/list',
+            method: 'POST',
+            body: {
+                type: 'json',
+                content: {
+                    sort: sort,
+                    filter: filter,
+                }
+            },
+        })
+    }
+
+    public exportProducts({ sort, filter }: GetProductsInput) {
+        return this.fetch<Blob>({
+            path: '/product/export',
             method: 'POST',
             body: {
                 type: 'json',

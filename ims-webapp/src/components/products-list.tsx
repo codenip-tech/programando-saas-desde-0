@@ -11,7 +11,7 @@ function ProductRow({ product }: { product: ProductsItem }) {
 }
 
 function ProductsList() {
-    const {products, sortBy, filterBy, importFile} = useProducts()
+    const {products, sortBy, filterBy, importFile, exportToCsv} = useProducts()
     const [filterValue, setFilterValue] = useState('')
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -28,6 +28,7 @@ function ProductsList() {
         <>
             <input id="file" type="file" onChange={handleFileChange}/>
             <input value={filterValue} onChange={(event) => setFilterValue(event.target.value)} />
+            <button onClick={exportToCsv}>Export</button>
             <table>
                 <thead>
                 <tr>
