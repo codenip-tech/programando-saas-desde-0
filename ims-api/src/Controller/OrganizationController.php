@@ -10,6 +10,7 @@ use App\Repository\MembershipRepository;
 use App\Repository\OrganizationRepository;
 use App\Repository\ProductRepository;
 use App\Service\OrganizationAccessChecker;
+use App\Service\OrganizationCreator;
 use App\Value\MembershipRole;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -22,21 +23,18 @@ class OrganizationController extends AbstractController
     #[Route('', name: 'organization_create', methods: ['POST'])]
     public function createProduct(
         Request $request,
-        MembershipRepository $membershipRepository,
+        OrganizationCreator $organizationCreator,
     ): JsonResponse {
         $payload = $request->getPayload();
         $organizationName = $payload->get('name');
         /** @var User $user */
         $user = $this->getUser();
 
-        $organization = new Organization($organizationName, $user);
-
-        $membership = new Membership($organization, $user, MembershipRole::ADMIN);
-        $membershipRepository->save($membership);
+        $membership = $organizationCreator->create($organizationName, $user);
 
         return new JsonResponse(
             [
-                'id' => $organization->getId()
+                'id' => $membership->getOrganization()->getId()
             ]
         );
     }

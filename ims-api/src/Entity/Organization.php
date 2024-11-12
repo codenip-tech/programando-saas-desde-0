@@ -7,7 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: OrganizationRepository::class)]
 #[ORM\Table(name: '`organizations`')]
-final class Organization
+class Organization
 {
     public function __construct(string $name, User $owner) {
         $this->name = $name;

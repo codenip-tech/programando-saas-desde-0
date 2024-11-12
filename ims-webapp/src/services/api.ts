@@ -57,6 +57,24 @@ class Api {
         })
     }
 
+    public async getPortalUrl() {
+        const response = await this.fetch<{ url: string }>({
+            method: 'POST',
+            path: '/billing/portal-url',
+        })
+
+        return response.url
+    }
+
+    public async onCheckoutSuccess() {
+        const response = await this.fetch<{ success: true }>({
+            method: 'POST',
+            path: '/billing/on-successful-checkout',
+        })
+
+        return response.success
+    }
+
     public importFile(file: File) {
         return this.fetch({
             method: 'POST',

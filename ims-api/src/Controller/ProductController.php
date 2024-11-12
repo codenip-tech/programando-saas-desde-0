@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Dto\ProductListDto;
 use App\Entity\Product;
 use App\Entity\Tag;
+use App\Repository\OrganizationBillingRepository;
 use App\Repository\ProductRepository;
 use App\Repository\TagRepository;
 use App\Service\ProductFetcher;
@@ -171,11 +172,21 @@ class ProductController extends AbstractController
         Request $request,
         AccessingMember $accessingMember,
         ProductRepository $productRepository,
+        OrganizationBillingRepository $organizationBillingRepository,
     ): JsonResponse {
         $payload = $request->getPayload();
         $productName = $payload->get('name');
 
         $membership = $accessingMember->membership;
+
+        $currentProductCount = $productRepository->countProductsForOrganization($membership->getOrganization());
+        if ($currentProductCount >= 3) {
+            $organizationBilling = $organizationBillingRepository->findOneForOrganization($membership->getOrganization());
+            if ($organizationBilling->isInactive()) {
+                throw new BadRequestException('Reached max product count');
+            }
+        }
+
         $product = new Product($membership->getOrganization(), $productName);
         $productRepository->save($product);
 

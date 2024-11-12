@@ -6,7 +6,6 @@ use App\Entity\Organization;
 use App\Entity\Product;
 use App\Repository\Value\ProductListFilter;
 use App\Repository\Value\ProductListSort;
-use App\Repository\Value\ProductListSortField;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -17,6 +16,13 @@ class ProductRepository
     public function __construct(ManagerRegistry $registry)
     {
         $this->entityRepository = new ServiceEntityRepository($registry, Product::class);
+    }
+
+    public function countProductsForOrganization(Organization $organization): int
+    {
+        return $this->entityRepository->count([
+            'organization' => $organization,
+        ]);
     }
 
     public function save(Product $product): void

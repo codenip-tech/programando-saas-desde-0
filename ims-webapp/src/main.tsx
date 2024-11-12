@@ -15,6 +15,7 @@ import Navbar from "./components/navbar.tsx";
 import Products from "./routes/products-list.tsx";
 import ProductEdit from "./routes/product-edit.tsx";
 import ProductCreate from "./routes/product-create.tsx";
+import Billing from "./routes/billing.tsx";
 
 const router = createBrowserRouter([
     {
@@ -43,6 +44,10 @@ const router = createBrowserRouter([
         path: appRoutePrefix,
         element: <PrivateRoute />,
         children: [
+            {
+                path: routes.billing,
+                element: <Billing />
+            },
             {
                 path: routes.dashboard,
                 element: <Dashboard />
